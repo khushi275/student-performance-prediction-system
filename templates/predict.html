@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Predict – StudentAI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root{--neon-blue:#00d4ff;--neon-purple:#7b2fff;--neon-green:#00ff88;}
+    body{background:#0d0d1a;color:#eee;font-family:'Segoe UI',sans-serif;}
+    .navbar-custom{background:rgba(13,13,26,.9);backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(0,212,255,.15);}
+    .navbar-brand span{color:var(--neon-blue);}
+    .nav-link{color:#ccc!important;} .nav-link:hover{color:var(--neon-blue)!important;}
+    /* ---- Page header ---- */
+    .page-header{
+      padding:100px 0 40px;
+      background:linear-gradient(135deg,rgba(0,212,255,.06),rgba(123,47,255,.06));
+      border-bottom:1px solid rgba(255,255,255,.07);text-align:center;
+    }
+    .gradient-text{
+      background:linear-gradient(90deg,var(--neon-blue),var(--neon-purple));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    /* ---- Cards ---- */
+    .form-card{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:20px;padding:32px;margin-bottom:24px;
+      transition:border-color .3s;
+    }
+    .form-card:hover{border-color:rgba(0,212,255,.25);}
+    .card-icon-header{
+      display:flex;align-items:center;gap:14px;margin-bottom:24px;
+      padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .card-icon{
+      width:48px;height:48px;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+    }
+    .ci-blue{background:rgba(0,212,255,.15);color:var(--neon-blue);}
+    .ci-purple{background:rgba(123,47,255,.15);color:var(--neon-purple);}
+    .ci-green{background:rgba(0,255,136,.15);color:var(--neon-green);}
+    .ci-orange{background:rgba(255,150,0,.15);color:#ff9600;}
+    .card-title-text{font-size:1.1rem;font-weight:700;margin:0;}
+    .card-subtitle-text{font-size:.8rem;color:#888;margin:0;}
+    /* ---- Form controls ---- */
+    .form-label{color:#bbb;font-size:.88rem;font-weight:600;margin-bottom:6px;}
+    .form-control,.form-select{
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.1);
+      color:#eee;border-radius:10px;
+    }
+    .form-control:focus,.form-select:focus{
+      background:rgba(0,212,255,.08);
+      border-color:var(--neon-blue);
+      box-shadow:0 0 0 3px rgba(0,212,255,.15);color:#eee;
+    }
+    .form-control::placeholder{color:#555;}
+    /* ---- Sliders ---- */
+    .slider-wrap{position:relative;}
+    .slider-val{
+      position:absolute;right:0;top:-28px;
+      background:var(--neon-blue);color:#000;
+      font-weight:700;font-size:.75rem;
+      padding:2px 10px;border-radius:20px;
+      min-width:52px;text-align:center;
+    }
+    input[type=range]{accent-color:var(--neon-blue);width:100%;cursor:pointer;}
+    /* ---- Submit ---- */
+    .btn-predict{
+      background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));
+      border:none;color:#fff;font-weight:700;font-size:1.1rem;
+      padding:16px 60px;border-radius:50px;
+      box-shadow:0 0 30px rgba(0,212,255,.4);transition:all .3s;width:100%;
+    }
+    .btn-predict:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(0,212,255,.7);color:#fff;}
+    /* ---- Progress stepper ---- */
+    .stepper{display:flex;justify-content:center;gap:12px;margin-bottom:40px;flex-wrap:wrap;}
+    .step{
+      display:flex;align-items:center;gap:8px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:30px;padding:8px 18px;font-size:.85rem;
+    }
+    .step.active{border-color:var(--neon-blue);background:rgba(0,212,255,.1);color:var(--neon-blue);}
+    .step-num{
+      width:24px;height:24px;border-radius:50%;
+      background:rgba(255,255,255,.1);
+      display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;
+    }
+    .step.active .step-num{background:var(--neon-blue);color:#000;}
+    /* ai section toggle */
+    #aiSection{transition:all .4s;}
+    select option{background:#1a1a2e;color:#eee;}
+    .live-preview{
+      background:rgba(0,212,255,.06);
+      border:1px solid rgba(0,212,255,.2);
+      border-radius:14px;padding:20px;margin-top:8px;font-size:.85rem;
+    }
+    .preview-item{display:flex;justify-content:space-between;margin-bottom:8px;color:#aaa;}
+    .preview-item strong{color:var(--neon-blue);}
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/"><i class="fas fa-brain me-2" style="color:var(--neon-blue)"></i><span>Student Performance Predictor</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fas fa-bars text-white"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link active" href="/predict"><i class="fas fa-magic me-1"></i>Predict</a></li>
+        <li class="nav-item"><a class="nav-link" href="/compare"><i class="fas fa-code-compare me-1"></i>Compare</a></li>
+        <li class="nav-item"><a class="nav-link" href="/history"><i class="fas fa-history me-1"></i>History</a></li>
+        <li class="nav-item"><a class="nav-link" href="/insights"><i class="fas fa-chart-line me-1"></i>Insights</a></li>
+        <li class="nav-item"><a class="nav-link" href="/model-performance"><i class="fas fa-microscope me-1"></i>Model</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Page Header -->
+<div class="page-header">
+  <div class="container">
+    <h1 class="fw-bold mb-2"><span class="gradient-text">Student Performance</span> Prediction</h1>
+    <p class="text-secondary">Fill in the details below to get AI-powered predictions & insights</p>
+  </div>
+</div>
+
+<div class="container py-5">
+  <!-- Stepper -->
+  <div class="stepper">
+    <div class="step active"><div class="step-num">1</div> Student Info</div>
+    <div class="step active"><div class="step-num">2</div> Academic Info</div>
+    <div class="step active"><div class="step-num">3</div> Behavioral Data</div>
+    <div class="step active"><div class="step-num">4</div> AI Usage</div>
+  </div>
+
+  <form action="/predict" method="POST" id="predictForm">
+    <div class="row g-4">
+
+      <!-- === 1. Student Info === -->
+      <div class="col-12">
+        <div class="form-card">
+          <div class="card-icon-header">
+            <div class="card-icon ci-blue"><i class="fas fa-user"></i></div>
+            <div>
+              <p class="card-title-text">Student Information</p>
+              <p class="card-subtitle-text">Basic personal details</p>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-id-card me-1"></i>Student Name</label>
+              <input type="text" name="student_name" class="form-control" placeholder="e.g. Rahul Sharma" required/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-birthday-cake me-1"></i>Age</label>
+              <input type="number" name="age" class="form-control" min="10" max="30" placeholder="17" required/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-venus-mars me-1"></i>Gender</label>
+              <select name="gender" class="form-select" required>
+                <option value="">Select gender</option>
+                <option>Male</option><option>Female</option><option>Other</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-layer-group me-1"></i>Grade / Year Level</label>
+              <select name="grade_level" class="form-select" required>
+                <option value="">Select grade</option>
+                <option>10th</option><option>11th</option><option>12th</option>
+                <option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === 2. Academic Info === -->
+      <div class="col-12">
+        <div class="form-card">
+          <div class="card-icon-header">
+            <div class="card-icon ci-purple"><i class="fas fa-book-open"></i></div>
+            <div>
+              <p class="card-title-text">Academic Information</p>
+              <p class="card-subtitle-text">Study habits and academic performance</p>
+            </div>
+          </div>
+          <div class="row g-4">
+            <!-- Study Hours slider -->
+            <div class="col-md-6">
+              <label class="form-label"><i class="fas fa-clock me-1"></i>Study Hours Per Day</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="studyVal">4h</span>
+                <input type="range" name="study_hours_per_day" id="studySlider"
+                       min="0" max="12" step="0.5" value="4"
+                       oninput="updateSlider('studySlider','studyVal', v=>v+'h')"/>
+              </div>
+            </div>
+            <!-- Attendance slider -->
+            <div class="col-md-6">
+              <label class="form-label"><i class="fas fa-user-check me-1"></i>Attendance (%)</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="attVal">75%</span>
+                <input type="range" name="attendance_percentage" id="attSlider"
+                       min="0" max="100" step="1" value="75"
+                       oninput="updateSlider('attSlider','attVal', v=>v+'%')"/>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-file-alt me-1"></i>Last Exam Score (0–100)</label>
+              <input type="number" name="last_exam_score" class="form-control" min="0" max="100" placeholder="65" required/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-tasks me-1"></i>Assignment Avg Score</label>
+              <input type="number" name="assignment_scores_avg" class="form-control" min="0" max="100" step="0.1" placeholder="70" required/>
+            </div>
+            <!-- Concept Understanding slider -->
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-brain me-1"></i>Concept Understanding (0–100)</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="conceptVal">60</span>
+                <input type="range" name="concept_understanding_score" id="conceptSlider"
+                       min="0" max="100" step="1" value="60"
+                       oninput="updateSlider('conceptSlider','conceptVal', v=>v)"/>
+              </div>
+            </div>
+            <!-- Class Participation slider -->
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-hand-raise me-1"></i>Class Participation (0–100)</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="partVal">50</span>
+                <input type="range" name="class_participation_score" id="partSlider"
+                       min="0" max="100" step="1" value="50"
+                       oninput="updateSlider('partSlider','partVal', v=>v)"/>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-chalkboard-teacher me-1"></i>Tutoring Hours/Week</label>
+              <input type="number" name="tutoring_hours" class="form-control" min="0" max="20" step="0.5" placeholder="0"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-chart-line me-1"></i>Study Consistency (0–1)</label>
+              <input type="number" name="study_consistency_index" class="form-control" min="0" max="1" step="0.01" placeholder="0.7"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === 3. Behavioral Data === -->
+      <div class="col-12">
+        <div class="form-card">
+          <div class="card-icon-header">
+            <div class="card-icon ci-green"><i class="fas fa-user-cog"></i></div>
+            <div>
+              <p class="card-title-text">Behavioral & Lifestyle Data</p>
+              <p class="card-subtitle-text">Sleep, social media and improvement metrics</p>
+            </div>
+          </div>
+          <div class="row g-4">
+            <!-- Sleep slider -->
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-bed me-1"></i>Sleep Hours Per Night</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="sleepVal">7h</span>
+                <input type="range" name="sleep_hours" id="sleepSlider"
+                       min="2" max="12" step="0.5" value="7"
+                       oninput="updateSlider('sleepSlider','sleepVal', v=>v+'h')"/>
+              </div>
+            </div>
+            <!-- Social media slider -->
+            <div class="col-md-4">
+              <label class="form-label"><i class="fab fa-instagram me-1"></i>Social Media Hours/Day</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="socialVal">2h</span>
+                <input type="range" name="social_media_hours" id="socialSlider"
+                       min="0" max="10" step="0.5" value="2"
+                       oninput="updateSlider('socialSlider','socialVal', v=>v+'h')"/>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label"><i class="fas fa-trending-up me-1"></i>Improvement Rate (-1 to 1)</label>
+              <input type="number" name="improvement_rate" class="form-control" min="-1" max="1" step="0.01" placeholder="0.1"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === 4. AI Usage === -->
+      <div class="col-12">
+        <div class="form-card">
+          <div class="card-icon-header">
+            <div class="card-icon ci-orange"><i class="fas fa-robot"></i></div>
+            <div>
+              <p class="card-title-text">AI Tool Usage</p>
+              <p class="card-subtitle-text">ChatGPT, Gemini, Copilot etc.</p>
+            </div>
+          </div>
+          <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+              <label class="form-label">Does student use AI tools?</label>
+              <div class="d-flex gap-3 mt-1">
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="uses_ai" value="1" id="aiYes"
+                         onchange="toggleAI(true)"/> <label class="form-check-label" for="aiYes">Yes</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="uses_ai" value="0" id="aiNo"
+                         checked onchange="toggleAI(false)"/> <label class="form-check-label" for="aiNo">No</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="aiSection" class="row g-3 mt-2" style="display:none!important">
+            <div class="col-md-4">
+              <label class="form-label">AI Tool Used</label>
+              <select name="ai_tools_used" class="form-select">
+                <option>ChatGPT</option><option>Gemini</option><option>Copilot</option>
+                <option>Claude</option><option>ChatGPT+Gemini</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Purpose of AI Usage</label>
+              <select name="ai_usage_purpose" class="form-select">
+                <option>Homework</option><option>Exam Prep</option><option>Doubt Solving</option>
+                <option>Notes</option><option>Coding</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">AI Usage Time (mins/day)</label>
+              <input type="number" name="ai_usage_time_minutes" class="form-control" min="0" max="600" placeholder="60"/>
+            </div>
+            <!-- AI Dependency slider -->
+            <div class="col-md-4">
+              <label class="form-label">AI Dependency Score (0–100)</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="depVal">40</span>
+                <input type="range" name="ai_dependency_score" id="depSlider"
+                       min="0" max="100" step="1" value="40"
+                       oninput="updateSlider('depSlider','depVal', v=>v)"/>
+              </div>
+            </div>
+            <!-- AI-generated content slider -->
+            <div class="col-md-4">
+              <label class="form-label">AI-Generated Content (%)</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="genVal">20%</span>
+                <input type="range" name="ai_generated_content_percentage" id="genSlider"
+                       min="0" max="100" step="1" value="20"
+                       oninput="updateSlider('genSlider','genVal', v=>v+'%')"/>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">AI Prompts Per Week</label>
+              <input type="number" name="ai_prompts_per_week" class="form-control" min="0" max="500" placeholder="20"/>
+            </div>
+            <!-- AI Ethics slider -->
+            <div class="col-md-4">
+              <label class="form-label">AI Ethics Score (0–100)</label>
+              <div class="slider-wrap mt-3">
+                <span class="slider-val" id="ethicsVal">70</span>
+                <input type="range" name="ai_ethics_score" id="ethicsSlider"
+                       min="0" max="100" step="1" value="70"
+                       oninput="updateSlider('ethicsSlider','ethicsVal', v=>v)"/>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="col-12 text-center pb-5">
+        <button type="submit" class="btn btn-predict" id="submitBtn">
+          <i class="fas fa-magic me-2"></i>Generate Prediction
+        </button>
+        <p class="text-secondary mt-3 small">Results will be displayed instantly with charts & insights</p>
+      </div>
+    </div>
+  </form>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="/static/css/theme.css" rel="stylesheet">
+      <script src="/static/js/theme.js" defer></script>
+<script>
+  function updateSlider(sliderId, valId, fmt){
+    const v = document.getElementById(sliderId).value;
+    document.getElementById(valId).textContent = fmt(v);
+  }
+  function toggleAI(show){
+    const s = document.getElementById('aiSection');
+    s.style.display = show ? 'flex' : 'none';
+    s.style.flexWrap = 'wrap';
+  }
+  // Submit loading state
+  document.getElementById('predictForm').addEventListener('submit', function(){
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML='<i class="fas fa-spinner fa-spin me-2"></i>Analysing...';
+    btn.disabled=true;
+  });
+
+
+</script>
+</body>
+</html>

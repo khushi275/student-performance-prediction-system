@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Performance Prediction System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" rel="stylesheet">
+  <link href="/static/css/theme.css" rel="stylesheet">
+  <style>
+    :root{
+      --neon-blue:#00d4ff;
+      --neon-purple:#7b2fff;
+      --neon-green:#00ff88;
+      --dark-bg:#0d0d1a;
+      --card-bg:rgba(255,255,255,0.05);
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:var(--dark-bg);color:#fff;font-family:'Segoe UI',sans-serif;overflow-x:hidden;}
+    /* ---------- animated gradient bg ---------- */
+    .hero{
+      min-height:100vh;
+      background:linear-gradient(135deg,#0d0d1a,#1a0533,#001a33,#0d0d1a);
+      background-size:400% 400%;
+      animation:gradientShift 10s ease infinite;
+      display:flex;flex-direction:column;
+      position:relative;overflow:hidden;
+    }
+    @keyframes gradientShift{
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+    /* ---------- particles ---------- */
+    .particles{position:absolute;width:100%;height:100%;overflow:hidden;z-index:0;}
+    .particle{
+      position:absolute;width:4px;height:4px;border-radius:50%;
+      background:var(--neon-blue);opacity:0.6;
+      animation:float linear infinite;
+    }
+    @keyframes float{
+      0%{transform:translateY(110vh) translateX(0);opacity:0.6;}
+      100%{transform:translateY(-10vh) translateX(40px);opacity:0;}
+    }
+    /* ---------- navbar ---------- */
+    .navbar-custom{
+      background:rgba(13,13,26,0.85);
+      backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(0,212,255,0.15);
+    }
+    .navbar-brand span{color:var(--neon-blue);}
+    .nav-link{color:#ccc!important;transition:.3s;}
+    .nav-link:hover{color:var(--neon-blue)!important;}
+    /* ---------- hero content ---------- */
+    .hero-content{
+      position:relative;z-index:1;
+      flex:1;display:flex;align-items:center;justify-content:center;
+      padding:100px 20px 60px;
+    }
+    .badge-chip{
+      background:rgba(0,212,255,0.15);
+      border:1px solid var(--neon-blue);
+      color:var(--neon-blue);
+      padding:6px 18px;border-radius:999px;
+      font-size:.8rem;letter-spacing:2px;
+      text-transform:uppercase;
+    }
+    .hero-title{
+      font-size:clamp(2.2rem,6vw,4.2rem);
+      font-weight:800;line-height:1.1;
+    }
+    .gradient-text{
+      background:linear-gradient(90deg,var(--neon-blue),var(--neon-purple),var(--neon-green));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .hero-sub{color:#aaa;font-size:1.15rem;max-width:580px;}
+    /* ---------- buttons ---------- */
+    .btn-glow{
+      background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));
+      border:none;color:#fff;font-weight:600;
+      padding:14px 36px;border-radius:50px;font-size:1rem;
+      box-shadow:0 0 20px rgba(0,212,255,0.4);
+      transition:all .3s;
+    }
+    .btn-glow:hover{
+      transform:translateY(-3px);
+      box-shadow:0 0 40px rgba(0,212,255,0.7);color:#fff;
+    }
+    .btn-outline-glow{
+      border:2px solid var(--neon-blue);color:var(--neon-blue);
+      padding:12px 32px;border-radius:50px;font-weight:600;
+      background:transparent;transition:all .3s;
+    }
+    .btn-outline-glow:hover{
+      background:var(--neon-blue);color:#000;
+      box-shadow:0 0 30px rgba(0,212,255,0.5);
+    }
+    /* ---------- stats bar ---------- */
+    .stats-bar{
+      background:rgba(255,255,255,0.03);
+      border-top:1px solid rgba(255,255,255,0.07);
+      border-bottom:1px solid rgba(255,255,255,0.07);
+      padding:30px 0;
+    }
+    .stat-item{text-align:center;}
+    .stat-num{font-size:2rem;font-weight:800;color:var(--neon-blue);}
+    .stat-label{color:#888;font-size:.85rem;margin-top:4px;}
+    /* ---------- features ---------- */
+    .features-section{padding:100px 0;}
+    .section-title{font-size:2.5rem;font-weight:800;text-align:center;margin-bottom:16px;}
+    .section-sub{text-align:center;color:#888;margin-bottom:60px;}
+    .feature-card{
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:20px;padding:36px 28px;
+      transition:all .4s;height:100%;
+    }
+    .feature-card:hover{
+      background:rgba(0,212,255,0.06);
+      border-color:rgba(0,212,255,0.3);
+      transform:translateY(-8px);
+      box-shadow:0 20px 60px rgba(0,212,255,0.1);
+    }
+    .feature-icon{
+      width:64px;height:64px;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.6rem;margin-bottom:20px;
+    }
+    .icon-blue{background:rgba(0,212,255,0.15);color:var(--neon-blue);}
+    .icon-purple{background:rgba(123,47,255,0.15);color:var(--neon-purple);}
+    .icon-green{background:rgba(0,255,136,0.15);color:var(--neon-green);}
+    .icon-orange{background:rgba(255,150,0,0.15);color:#ff9600;}
+    .icon-pink{background:rgba(255,0,128,0.15);color:#ff0080;}
+    .icon-teal{background:rgba(0,255,200,0.15);color:#00ffc8;}
+    .feature-card h5{font-weight:700;margin-bottom:10px;}
+    .feature-card p{color:#888;font-size:.9rem;line-height:1.6;}
+    /* ---------- CTA ---------- */
+    .cta-section{
+      padding:80px 0;
+      background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(123,47,255,0.08));
+      border-top:1px solid rgba(255,255,255,0.07);
+      text-align:center;
+    }
+    /* ---------- footer ---------- */
+    footer{
+      background:rgba(0,0,0,0.4);
+      border-top:1px solid rgba(255,255,255,0.07);
+      padding:30px 0;text-align:center;color:#555;font-size:.85rem;
+    }
+    /* ---------- dark mode toggle ---------- */
+    /* ---------- scroll reveal animation ---------- */
+    .reveal{opacity:0;transform:translateY(30px);transition:all .7s ease;}
+    .reveal.visible{opacity:1;transform:translateY(0);}
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/"><i class="fas fa-brain me-2" style="color:var(--neon-blue)"></i><span>Student Performance Predictor</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fas fa-bars text-white"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="/predict"><i class="fas fa-magic me-1"></i>Predict</a></li>
+        <li class="nav-item"><a class="nav-link" href="/compare"><i class="fas fa-code-compare me-1"></i>Compare</a></li>
+        <li class="nav-item"><a class="nav-link" href="/history"><i class="fas fa-history me-1"></i>History</a></li>
+        <li class="nav-item"><a class="nav-link" href="/insights"><i class="fas fa-chart-line me-1"></i>Insights</a></li>
+        <li class="nav-item"><a class="nav-link" href="/model-performance"><i class="fas fa-microscope me-1"></i>Model</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="particles" id="particles"></div>
+  <div class="hero-content">
+    <div class="container text-center">
+      <div class="badge-chip mb-4 d-inline-block">🤖 AI-Powered &nbsp;|&nbsp; Multi-Model Ensemble</div>
+      <h1 class="hero-title mb-4">
+        AI-Based<br/>
+        <span class="gradient-text">Student Performance</span><br/>
+        Predictor
+      </h1>
+      <p class="hero-sub mx-auto mb-5">
+        Leverage machine learning to predict academic grades, analyse risk levels,
+        and unlock personalised improvement insights — instantly.
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="/predict" class="btn btn-glow">
+          <i class="fas fa-rocket me-2"></i>Predict Now
+        </a>
+        <a href="/insights" class="btn btn-outline-glow">
+          <i class="fas fa-chart-bar me-2"></i>View Insights
+        </a>
+      </div>
+      <!-- floating cards preview -->
+      <div class="row justify-content-center mt-5 g-3">
+        <div class="col-auto">
+          <div style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);border-radius:14px;padding:16px 24px;font-size:.85rem">
+            <div style="color:var(--neon-blue);font-weight:700;font-size:1.4rem">A+</div>
+            <div style="color:#888">Predicted Grade</div>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div style="background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);border-radius:14px;padding:16px 24px;font-size:.85rem">
+            <div style="color:var(--neon-green);font-weight:700;font-size:1.4rem">87%</div>
+            <div style="color:#888">Pass Probability</div>
+          </div>
+        </div>
+        <div class="col-auto">
+          <div style="background:rgba(123,47,255,0.1);border:1px solid rgba(123,47,255,0.3);border-radius:14px;padding:16px 24px;font-size:.85rem">
+            <div style="color:var(--neon-purple);font-weight:700;font-size:1.4rem">🟢 Low</div>
+            <div style="color:#888">Risk Level</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="row g-4 justify-content-center">
+      <div class="col-6 col-md-3 stat-item">
+        <div class="stat-num">8,000+</div>
+        <div class="stat-label">Training Records</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="stat-num">95%+</div>
+        <div class="stat-label">Model Accuracy</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="stat-num">26</div>
+        <div class="stat-label">Input Features</div>
+      </div>
+      <div class="col-6 col-md-3 stat-item">
+        <div class="stat-num">3</div>
+        <div class="stat-label">ML Algorithms</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<section class="features-section">
+  <div class="container">
+    <h2 class="section-title gradient-text reveal">What We Predict</h2>
+    <p class="section-sub reveal">Multi-dimensional analysis powered by ensemble machine learning</p>
+    <div class="row g-4">
+      <div class="col-md-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon icon-blue"><i class="fas fa-graduation-cap"></i></div>
+          <h5>Final Grade Prediction</h5>
+          <p>Predicts A / B / C/D grade with probability distribution across all categories.</p>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon icon-green"><i class="fas fa-check-circle"></i></div>
+          <h5>Pass / Fail Probability</h5>
+          <p>Calculates the precise probability of passing, shown with visual progress indicators.</p>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon icon-orange"><i class="fas fa-shield-alt"></i></div>
+          <h5>Risk Level Analysis</h5>
+          <p>Classifies students into Low / Medium / High risk categories with colour-coded indicators.</p>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon icon-purple"><i class="fas fa-lightbulb"></i></div>
+          <h5>AI Insights & Tips</h5>
+          <p>Rule-based intelligent suggestions pinpointing exactly what the student needs to improve.</p>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon icon-pink"><i class="fas fa-chart-radar"></i></div>
+          <h5>Radar Performance Chart</h5>
+          <p>Interactive radar chart comparing study time, attendance, participation, and more.</p>
+        </div>
+      </div>
+      <div class="col-md-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon icon-teal"><i class="fas fa-file-pdf"></i></div>
+          <h5>PDF Report Download</h5>
+          <p>Download a professional prediction report with all charts and insights included.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2 class="section-title reveal">Ready to Predict Performance?</h2>
+    <p class="section-sub reveal">Fill in the student details and get instant AI-powered analysis.</p>
+    <a href="/predict" class="btn btn-glow btn-lg reveal">
+      <i class="fas fa-magic me-2"></i>Start Prediction
+    </a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <p>🎓 AI-Based Student Performance Predictor &nbsp;|&nbsp; Built with Flask · Scikit-Learn · Bootstrap 5</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // --- Particles ---
+  const container = document.getElementById('particles');
+  for(let i=0;i<60;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const colors=['#00d4ff','#7b2fff','#00ff88','#ff9600'];
+    p.style.cssText=`
+      left:${Math.random()*100}%;
+      width:${Math.random()*4+2}px;height:${Math.random()*4+2}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*8+6}s;
+      animation-delay:${Math.random()*6}s;
+    `;
+    container.appendChild(p);
+  }
+
+  // --- Scroll reveal ---
+  const revealEls=document.querySelectorAll('.reveal');
+  const observer=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});
+  },{threshold:0.15});
+  revealEls.forEach(el=>observer.observe(el));
+
+ </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+/* StudentAI — Global Dark Theme */
+
+:root {
+  --neon-blue:   #00d4ff;
+  --neon-purple: #7b2fff;
+  --neon-green:  #00ff88;
+  --dark-bg:     #0d0d1a;
+  --card-bg:     rgba(255,255,255,0.04);
+  --border:      rgba(255,255,255,0.08);
+  --border-blue: rgba(0,212,255,0.25);
+  --text-muted:  #888;
+}
+
+body {
+  background: var(--dark-bg);
+  color: #eee;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Navbar ── */
+.navbar-custom {
+  background: rgba(13,13,26,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0,212,255,0.15);
+}
+.navbar-brand span { color: var(--neon-blue); }
+.nav-link          { color: #ccc !important; transition: color .2s; }
+.nav-link:hover    { color: var(--neon-blue) !important; }
+.nav-link.active   { color: var(--neon-blue) !important; font-weight: 600; }
+.navbar-toggler        { border: none !important; }
+.navbar-toggler:focus  { box-shadow: 0 0 0 3px rgba(0,212,255,0.2); }
+
+/* ── Forms ── */
+.form-control,
+.form-select {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: #eee;
+  border-radius: 10px;
+}
+.form-control::placeholder { color: var(--text-muted); }
+.form-control:focus,
+.form-select:focus {
+  background: rgba(0,212,255,0.08);
+  border-color: var(--neon-blue);
+  color: #eee;
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.15);
+}
+.form-label { color: #bbb; font-size: .85rem; font-weight: 600; }
+
+/* Select options background (cross-browser) */
+.form-select option,
+select option { background: #1a1a2e; color: #eee; }
+
+/* ── Cards ── */
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.chart-card h6 {
+  color: #bbb;
+  font-size: .8rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.metric-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  text-align: center;
+  transition: all .3s;
+}
+.metric-card:hover {
+  border-color: rgba(0,212,255,0.3);
+  transform: translateY(-4px);
+}
+
+/* ── Tables ── */
+.table { color: #ddd; }
+.table th {
+  background: rgba(0,212,255,0.08);
+  color: var(--neon-blue);
+  font-size: .8rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border-color: rgba(255,255,255,0.07);
+}
+.table td       { border-color: rgba(255,255,255,0.05); vertical-align: middle; }
+.table tbody tr:hover { background: rgba(0,212,255,0.04); }
+
+/* ── Progress ── */
+.progress { background: rgba(255,255,255,0.08); }
+.progress-bar { background: linear-gradient(90deg, var(--neon-blue), var(--neon-green)); }
+
+/* ── Grade badges ── */
+.badge-A  { background: rgba(0,255,136,0.2);  color: var(--neon-green); padding: 4px 12px; border-radius: 20px; }
+.badge-B  { background: rgba(0,212,255,0.2);  color: var(--neon-blue);  padding: 4px 12px; border-radius: 20px; }
+.badge-CD { background: rgba(255,65,54,0.2);  color: #ff4136;           padding: 4px 12px; border-radius: 20px; }
+
+/* ── Page header (shared) ── */
+.page-header {
+  padding: 100px 0 40px;
+  background: linear-gradient(135deg, rgba(0,212,255,.05), rgba(123,47,255,.05));
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  text-align: center;
+}
+.gradient-text {
+  background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Compare Students – StudentAI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--neon-blue:#00d4ff;--neon-purple:#7b2fff;--neon-green:#00ff88;}
+    body{background:#0d0d1a;color:#eee;font-family:'Segoe UI',sans-serif;}
+    .navbar-custom{background:rgba(13,13,26,.9);backdrop-filter:blur(14px);border-bottom:1px solid rgba(0,212,255,.15);}
+    .navbar-brand span{color:var(--neon-blue);}
+    .nav-link{color:#ccc!important;} .nav-link:hover{color:var(--neon-blue)!important;}
+    .page-header{padding:100px 0 40px;background:linear-gradient(135deg,rgba(0,212,255,.05),rgba(123,47,255,.05));
+      border-bottom:1px solid rgba(255,255,255,.07);text-align:center;}
+    .gradient-text{background:linear-gradient(90deg,var(--neon-blue),var(--neon-purple));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+    .student-panel{
+      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;padding:28px;
+    }
+    .student-panel.s1{border-top:3px solid var(--neon-blue);}
+    .student-panel.s2{border-top:3px solid var(--neon-purple);}
+    .form-control,.form-select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+      color:#eee;border-radius:10px;}
+    .form-control:focus,.form-select:focus{background:rgba(0,212,255,.08);border-color:var(--neon-blue);color:#eee;
+      box-shadow:0 0 0 3px rgba(0,212,255,.15);}
+    .form-label{color:#bbb;font-size:.85rem;font-weight:600;}
+    .btn-compare{background:linear-gradient(135deg,var(--neon-blue),var(--neon-purple));
+      border:none;color:#fff;font-weight:700;padding:14px 50px;border-radius:50px;
+      box-shadow:0 0 20px rgba(0,212,255,.4);}
+    .btn-compare:hover{transform:translateY(-3px);color:#fff;box-shadow:0 0 40px rgba(0,212,255,.7);}
+    .result-panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;padding:24px;}
+    .metric-row{display:flex;justify-content:space-between;align-items:center;
+      padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+    .metric-row:last-child{border:none;}
+    .winner{color:var(--neon-green);font-weight:700;}
+    .loser{color:#ff4136;}
+    .chart-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+      border-radius:18px;padding:24px;margin-top:24px;}
+    select option{background:#1a1a2e;}
+    #resultsSection{display:none;}
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/"><i class="fas fa-brain me-2" style="color:var(--neon-blue)"></i><span>Student Performance Predictor</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fas fa-bars text-white"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="/predict"><i class="fas fa-magic me-1"></i>Predict</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/compare"><i class="fas fa-code-compare me-1"></i>Compare</a></li>
+        <li class="nav-item"><a class="nav-link" href="/history"><i class="fas fa-history me-1"></i>History</a></li>
+        <li class="nav-item"><a class="nav-link" href="/insights"><i class="fas fa-chart-line me-1"></i>Insights</a></li>
+        <li class="nav-item"><a class="nav-link" href="/model-performance"><i class="fas fa-microscope me-1"></i>Model</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1 class="fw-bold mb-2"><span class="gradient-text">Student</span> Comparison</h1>
+    <p class="text-secondary">Compare two students side-by-side with AI-powered analysis</p>
+  </div>
+</div>
+
+<div class="container py-5">
+  <div class="row g-4">
+
+    <!-- Student 1 -->
+    <div class="col-md-6">
+      <div class="student-panel s1">
+        <h5 class="mb-4" style="color:var(--neon-blue)"><i class="fas fa-user me-2"></i>Student 1</h5>
+        <div class="row g-2" id="s1Fields">
+          <div class="col-6"><label class="form-label">Name</label>
+            <input class="form-control s1-field" name="student_name" placeholder="Student A"/></div>
+          <div class="col-6"><label class="form-label">Age</label>
+            <input class="form-control s1-field" name="age" type="number" value="18"/></div>
+          <div class="col-6"><label class="form-label">Gender</label>
+            <select class="form-select s1-field" name="gender"><option>Male</option><option>Female</option><option>Other</option></select></div>
+          <div class="col-6"><label class="form-label">Grade Level</label>
+            <select class="form-select s1-field" name="grade_level">
+              <option>10th</option><option>11th</option><option>12th</option>
+              <option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+            </select></div>
+          <div class="col-6"><label class="form-label">Study Hours/Day</label>
+            <input class="form-control s1-field" name="study_hours_per_day" type="number" step="0.5" value="4"/></div>
+          <div class="col-6"><label class="form-label">Attendance (%)</label>
+            <input class="form-control s1-field" name="attendance_percentage" type="number" value="80"/></div>
+          <div class="col-6"><label class="form-label">Last Exam Score</label>
+            <input class="form-control s1-field" name="last_exam_score" type="number" value="70"/></div>
+          <div class="col-6"><label class="form-label">Assignment Avg</label>
+            <input class="form-control s1-field" name="assignment_scores_avg" type="number" value="72"/></div>
+          <div class="col-6"><label class="form-label">Concept Understanding</label>
+            <input class="form-control s1-field" name="concept_understanding_score" type="number" value="65"/></div>
+          <div class="col-6"><label class="form-label">Participation</label>
+            <input class="form-control s1-field" name="class_participation_score" type="number" value="60"/></div>
+          <div class="col-6"><label class="form-label">Sleep Hours</label>
+            <input class="form-control s1-field" name="sleep_hours" type="number" step="0.5" value="7"/></div>
+          <div class="col-6"><label class="form-label">Social Media Hrs</label>
+            <input class="form-control s1-field" name="social_media_hours" type="number" step="0.5" value="2"/></div>
+          <div class="col-6"><label class="form-label">Tutoring Hours</label>
+            <input class="form-control s1-field" name="tutoring_hours" type="number" value="0"/></div>
+          <div class="col-6"><label class="form-label">Study Consistency</label>
+            <input class="form-control s1-field" name="study_consistency_index" type="number" step="0.01" value="0.7"/></div>
+          <div class="col-6"><label class="form-label">Improvement Rate</label>
+            <input class="form-control s1-field" name="improvement_rate" type="number" step="0.01" value="0.1"/></div>
+          <div class="col-6"><label class="form-label">AI Dependency</label>
+            <input class="form-control s1-field" name="ai_dependency_score" type="number" value="30"/></div>
+          <!-- hidden defaults -->
+          <input type="hidden" class="s1-field" name="uses_ai" value="0"/>
+          <input type="hidden" class="s1-field" name="ai_usage_time_minutes" value="0"/>
+          <input type="hidden" class="s1-field" name="ai_generated_content_percentage" value="0"/>
+          <input type="hidden" class="s1-field" name="ai_prompts_per_week" value="0"/>
+          <input type="hidden" class="s1-field" name="ai_ethics_score" value="50"/>
+          <input type="hidden" class="s1-field" name="ai_tools_used" value="No_AI"/>
+          <input type="hidden" class="s1-field" name="ai_usage_purpose" value="No_AI"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student 2 -->
+    <div class="col-md-6">
+      <div class="student-panel s2">
+        <h5 class="mb-4" style="color:var(--neon-purple)"><i class="fas fa-user me-2"></i>Student 2</h5>
+        <div class="row g-2" id="s2Fields">
+          <div class="col-6"><label class="form-label">Name</label>
+            <input class="form-control s2-field" name="student_name" placeholder="Student B"/></div>
+          <div class="col-6"><label class="form-label">Age</label>
+            <input class="form-control s2-field" name="age" type="number" value="18"/></div>
+          <div class="col-6"><label class="form-label">Gender</label>
+            <select class="form-select s2-field" name="gender"><option>Female</option><option>Male</option><option>Other</option></select></div>
+          <div class="col-6"><label class="form-label">Grade Level</label>
+            <select class="form-select s2-field" name="grade_level">
+              <option>10th</option><option>11th</option><option>12th</option>
+              <option>1st Year</option><option>2nd Year</option><option>3rd Year</option>
+            </select></div>
+          <div class="col-6"><label class="form-label">Study Hours/Day</label>
+            <input class="form-control s2-field" name="study_hours_per_day" type="number" step="0.5" value="2"/></div>
+          <div class="col-6"><label class="form-label">Attendance (%)</label>
+            <input class="form-control s2-field" name="attendance_percentage" type="number" value="55"/></div>
+          <div class="col-6"><label class="form-label">Last Exam Score</label>
+            <input class="form-control s2-field" name="last_exam_score" type="number" value="45"/></div>
+          <div class="col-6"><label class="form-label">Assignment Avg</label>
+            <input class="form-control s2-field" name="assignment_scores_avg" type="number" value="50"/></div>
+          <div class="col-6"><label class="form-label">Concept Understanding</label>
+            <input class="form-control s2-field" name="concept_understanding_score" type="number" value="40"/></div>
+          <div class="col-6"><label class="form-label">Participation</label>
+            <input class="form-control s2-field" name="class_participation_score" type="number" value="30"/></div>
+          <div class="col-6"><label class="form-label">Sleep Hours</label>
+            <input class="form-control s2-field" name="sleep_hours" type="number" step="0.5" value="5"/></div>
+          <div class="col-6"><label class="form-label">Social Media Hrs</label>
+            <input class="form-control s2-field" name="social_media_hours" type="number" step="0.5" value="6"/></div>
+          <div class="col-6"><label class="form-label">Tutoring Hours</label>
+            <input class="form-control s2-field" name="tutoring_hours" type="number" value="0"/></div>
+          <div class="col-6"><label class="form-label">Study Consistency</label>
+            <input class="form-control s2-field" name="study_consistency_index" type="number" step="0.01" value="0.3"/></div>
+          <div class="col-6"><label class="form-label">Improvement Rate</label>
+            <input class="form-control s2-field" name="improvement_rate" type="number" step="0.01" value="-0.1"/></div>
+          <div class="col-6"><label class="form-label">AI Dependency</label>
+            <input class="form-control s2-field" name="ai_dependency_score" type="number" value="70"/></div>
+          <input type="hidden" class="s2-field" name="uses_ai" value="1"/>
+          <input type="hidden" class="s2-field" name="ai_usage_time_minutes" value="120"/>
+          <input type="hidden" class="s2-field" name="ai_generated_content_percentage" value="60"/>
+          <input type="hidden" class="s2-field" name="ai_prompts_per_week" value="50"/>
+          <input type="hidden" class="s2-field" name="ai_ethics_score" value="40"/>
+          <input type="hidden" class="s2-field" name="ai_tools_used" value="ChatGPT"/>
+          <input type="hidden" class="s2-field" name="ai_usage_purpose" value="Homework"/>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <button class="btn btn-compare" onclick="compareStudents()">
+      <i class="fas fa-code-compare me-2"></i>Compare Now
+    </button>
+    <div id="loadingSpinner" class="mt-3" style="display:none">
+      <div class="spinner-border text-info"></div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSection" class="mt-5">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="result-panel" style="border-top:3px solid var(--neon-blue)">
+          <h5 style="color:var(--neon-blue)" id="s1Name">Student 1</h5>
+          <div id="s1Results"></div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="result-panel" style="border-top:3px solid var(--neon-purple)">
+          <h5 style="color:var(--neon-purple)" id="s2Name">Student 2</h5>
+          <div id="s2Results"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Radar comparison chart -->
+    <div class="chart-card">
+      <h6 class="mb-3" style="color:#bbb;text-transform:uppercase;letter-spacing:1px;font-size:.8rem">
+        <i class="fas fa-spider me-2"></i>Radar Comparison
+      </h6>
+      <canvas id="compareRadar" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="/static/css/theme.css" rel="stylesheet">
+  <script src="/static/js/theme.js" defer></script>
+<script>
+let radarInst = null;
+
+function collectFields(cls){
+  const fields = {};
+  document.querySelectorAll('.'+cls).forEach(el=>{
+    if(el.name) fields[el.name] = el.value;
+  });
+  return fields;
+}
+
+function renderResult(containerId, r){
+  const grade_color = r.predicted_grade==='A'?'#00ff88':r.predicted_grade==='B'?'#00d4ff':'#ff4136';
+  document.getElementById(containerId).innerHTML = `
+    <div class="metric-row"><span>Grade</span>
+      <strong style="color:${grade_color};font-size:1.4rem">${r.predicted_grade}</strong></div>
+    <div class="metric-row"><span>Pass Probability</span>
+      <strong style="color:#00d4ff">${r.pass_probability}%</strong></div>
+    <div class="metric-row"><span>Risk Level</span>
+      <strong>${r.risk_level}</strong></div>
+    <div class="metric-row"><span>Estimated Score</span>
+      <strong style="color:#ffc107">${r.score_estimate}</strong></div>
+    <div class="metric-row"><span>Score Range</span>
+      <span style="color:#888">${r.score_range_low} – ${r.score_range_high}</span></div>
+    <div class="mt-3">
+      ${r.insights.slice(0,2).map(i=>`<div style="font-size:.82rem;padding:8px 12px;margin-bottom:6px;background:rgba(255,255,255,.03);border-left:3px solid #00d4ff;border-radius:6px;color:#aaa">${i}</div>`).join('')}
+    </div>
+  `;
+}
+
+async function compareStudents(){
+  const s1 = collectFields('s1-field');
+  const s2 = collectFields('s2-field');
+  document.getElementById('loadingSpinner').style.display='block';
+
+  const res = await fetch('/api/compare', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({student1:s1, student2:s2})
+  });
+  const data = await res.json();
+  document.getElementById('loadingSpinner').style.display='none';
+
+  if(data.status !== 'success'){
+    alert('Error: '+data.message); return;
+  }
+  const r1=data.student1, r2=data.student2;
+  document.getElementById('s1Name').textContent = s1.student_name||'Student 1';
+  document.getElementById('s2Name').textContent = s2.student_name||'Student 2';
+  renderResult('s1Results', r1);
+  renderResult('s2Results', r2);
+
+  document.getElementById('resultsSection').style.display='block';
+  document.getElementById('resultsSection').scrollIntoView({behavior:'smooth'});
+
+  // Radar comparison
+  if(radarInst) radarInst.destroy();
+  radarInst = new Chart(document.getElementById('compareRadar'), {
+    type:'radar',
+    data:{
+      labels:['Study Time','Attendance','Performance','Participation','Consistency'],
+      datasets:[
+        {label:s1.student_name||'Student 1',
+         data:[r1.radar.study_time,r1.radar.attendance,r1.radar.performance,
+               r1.radar.participation,r1.radar.consistency],
+         backgroundColor:'rgba(0,212,255,.15)',borderColor:'#00d4ff',
+         pointBackgroundColor:'#00d4ff',borderWidth:2},
+        {label:s2.student_name||'Student 2',
+         data:[r2.radar.study_time,r2.radar.attendance,r2.radar.performance,
+               r2.radar.participation,r2.radar.consistency],
+         backgroundColor:'rgba(123,47,255,.15)',borderColor:'#7b2fff',
+         pointBackgroundColor:'#7b2fff',borderWidth:2}
+      ]
+    },
+    options:{
+      scales:{r:{ticks:{color:'#555',backdropColor:'transparent'},
+        grid:{color:'rgba(255,255,255,.08)'},
+        angleLines:{color:'rgba(255,255,255,.08)'},
+        pointLabels:{color:'#aaa'},min:0,max:100}},
+      plugins:{legend:{labels:{color:'#aaa'}}}
+    }
+  });
+}
+</script>
+</body>
+</html>

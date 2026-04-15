@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Prediction History – StudentAI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" rel="stylesheet"/>
+  <link href="/static/css/theme.css" rel="stylesheet"/>
+  <style>
+    .page-header {
+      padding: 100px 0 40px;
+      background: linear-gradient(135deg, rgba(0,212,255,.05), rgba(123,47,255,.05));
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      text-align: center;
+    }
+    .gradient-text {
+      background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .history-table {
+      background: rgba(255,255,255,.03);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.07);
+    }
+    .table { color: #ddd; margin: 0; }
+    .table th {
+      background: rgba(0,212,255,.08); color: var(--neon-blue);
+      font-size: .78rem; letter-spacing: 1px; text-transform: uppercase;
+      border-color: rgba(255,255,255,.07);
+    }
+    .table td { border-color: rgba(255,255,255,.05); vertical-align: middle; font-size: .88rem; }
+
+    /* Clickable row */
+    .table tbody tr {
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .table tbody tr:hover { background: rgba(0,212,255,.07) !important; }
+    .table tbody tr:hover .view-btn { opacity: 1; }
+    .view-btn {
+      opacity: 0;
+      transition: opacity .2s;
+      font-size: .75rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(0,212,255,.15);
+      border: 1px solid rgba(0,212,255,.3);
+      color: var(--neon-blue);
+      white-space: nowrap;
+    }
+
+    .badge-A  { background: rgba(0,255,136,.2); color: var(--neon-green); padding: 3px 12px; border-radius: 20px; }
+    .badge-B  { background: rgba(0,212,255,.2); color: var(--neon-blue);  padding: 3px 12px; border-radius: 20px; }
+    .badge-CD { background: rgba(255,65,54,.2);  color: #ff4136;          padding: 3px 12px; border-radius: 20px; }
+
+    .empty-state { text-align: center; padding: 80px 20px; color: #555; }
+    .empty-state i { font-size: 4rem; margin-bottom: 20px; display: block; }
+    .search-box {
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+      color: #eee; border-radius: 30px; padding: 10px 20px; outline: none;
+    }
+    .search-box:focus { border-color: var(--neon-blue); box-shadow: 0 0 0 3px rgba(0,212,255,.15); }
+    .search-box::placeholder { color: #666; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/"><i class="fas fa-brain me-2" style="color:var(--neon-blue)"></i><span>Student Performance Predictor</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fas fa-bars text-white"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link" href="/predict"><i class="fas fa-magic me-1"></i>Predict</a></li>
+        <li class="nav-item"><a class="nav-link" href="/compare"><i class="fas fa-code-compare me-1"></i>Compare</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/history"><i class="fas fa-history me-1"></i>History</a></li>
+        <li class="nav-item"><a class="nav-link" href="/insights"><i class="fas fa-chart-line me-1"></i>Insights</a></li>
+        <li class="nav-item"><a class="nav-link" href="/model-performance"><i class="fas fa-microscope me-1"></i>Model</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <h1 class="fw-bold mb-2"><span class="gradient-text">Prediction</span> History</h1>
+    <p class="text-secondary">Click any row to view the full result for that student</p>
+  </div>
+</div>
+
+<div class="container py-5">
+  {% if rows %}
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <p class="text-secondary m-0"><i class="fas fa-database me-2"></i>{{ rows|length }} prediction{{ 's' if rows|length != 1 }} stored</p>
+    <input class="search-box" type="text" id="searchInput" placeholder="🔍  Search by name..." oninput="filterTable()"/>
+  </div>
+
+  <div class="history-table">
+    <div class="table-responsive">
+      <table class="table table-hover" id="historyTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student</th>
+            <th>Grade</th>
+            <th>Pass Prob.</th>
+            <th>Risk</th>
+            <th>Est. Score</th>
+            <th>Attendance</th>
+            <th>Study Hrs</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr onclick="window.location='/history/{{ row['id'] }}'" title="Click to view full result">
+            <td style="color:#555">{{ row['id'] }}</td>
+            <td>
+              <strong>{{ row['student_name'] }}</strong><br/>
+              <small style="color:#666">{{ row['gender'] }} · Age {{ row['age'] }} · {{ row['grade_level'] }}</small>
+            </td>
+            <td>
+              <span class="{% if row['predicted_grade']=='A' %}badge-A{% elif row['predicted_grade']=='B' %}badge-B{% else %}badge-CD{% endif %}">
+                {{ row['predicted_grade'] }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:5px;background:rgba(255,255,255,.08);min-width:50px">
+                  <div class="progress-bar" style="width:{{ row['pass_probability']|float }}%;background:linear-gradient(90deg,#00d4ff,#00ff88)"></div>
+                </div>
+                <small>{{ "%.0f"|format(row['pass_probability']|float) }}%</small>
+              </div>
+            </td>
+            <td>
+              {% if 'Low' in row['risk_level'] %}<span style="color:var(--neon-green)">🟢 Low</span>
+              {% elif 'Medium' in row['risk_level'] %}<span style="color:#ffc107">🟡 Medium</span>
+              {% else %}<span style="color:#ff4136">🔴 High</span>{% endif %}
+            </td>
+            <td>{{ "%.1f"|format(row['score_estimate']|float) }}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:4px;background:rgba(255,255,255,.08);min-width:40px">
+                  <div class="progress-bar" style="width:{{ row['attendance']|float }}%;background:#7b2fff"></div>
+                </div>
+                <small>{{ "%.0f"|format(row['attendance']|float) }}%</small>
+              </div>
+            </td>
+            <td>{{ "%.1f"|format(row['study_hours']|float) }}h</td>
+            <td style="color:#666;font-size:.8rem;white-space:nowrap">{{ row['created_at'][:16] }}</td>
+            <td><span class="view-btn"><i class="fas fa-eye me-1"></i>View</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <h4>No predictions yet</h4>
+    <p>Make your first prediction to see history here.</p>
+    <a href="/predict" class="btn btn-primary rounded-pill px-4 mt-2">
+      <i class="fas fa-magic me-2"></i>Make a Prediction
+    </a>
+  </div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/theme.js"></script>
+<script>
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  document.querySelectorAll('#historyTable tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+</script>
+</body>
+</html>

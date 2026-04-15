@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Results – StudentAI</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" rel="stylesheet">
+  <link href="/static/css/theme.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    .result-hero {
+      padding: 100px 0 50px;
+      background: linear-gradient(135deg, rgba(0,212,255,.06), rgba(123,47,255,.06));
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align: center;
+    }
+    .grade-badge {
+      font-size: 4rem; font-weight: 900;
+      background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .metric-value { font-size: 2.2rem; font-weight: 800; }
+    .metric-label { color: var(--text-muted, #888); font-size: .85rem; margin-top: 4px; }
+    .risk-badge {
+      padding: 10px 28px; border-radius: 50px; font-size: 1rem;
+      font-weight: 700; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .risk-success { background: rgba(0,255,136,.15); border: 2px solid var(--neon-green); color: var(--neon-green); }
+    .risk-warning { background: rgba(255,193,7,.15);  border: 2px solid #ffc107;          color: #ffc107; }
+    .risk-danger  { background: rgba(255,65,54,.15);  border: 2px solid #ff4136;          color: #ff4136; }
+    .insight-card {
+      background: rgba(255,255,255,.03); border-left: 4px solid var(--neon-blue);
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; font-size: .88rem; color: #ccc;
+    }
+    .sim-card {
+      background: rgba(123,47,255,.07); border: 1px solid rgba(123,47,255,.25);
+      border-radius: 18px; padding: 24px;
+    }
+    .sim-desc {
+      font-size: .82rem; color: #888; margin-top: 6px; min-height: 1.2em;
+    }
+    .pass-bar .progress-bar { background: linear-gradient(90deg, var(--neon-blue), var(--neon-green)); }
+    .btn-pdf {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      border: none; color: #fff; font-weight: 600; padding: 12px 30px; border-radius: 50px;
+    }
+    .btn-pdf:hover { transform: translateY(-2px); color: #fff; box-shadow: 0 0 20px rgba(231,76,60,.5); }
+    .btn-primary-glow {
+      background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+      border: none; color: #fff; font-weight: 600; padding: 12px 30px; border-radius: 50px;
+    }
+    .btn-primary-glow:hover { transform: translateY(-2px); color: #fff; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/"><i class="fas fa-brain me-2" style="color:var(--neon-blue)"></i><span>Student Performance Predictor</span></a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fas fa-bars text-white"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav ms-auto align-items-center gap-2">
+        <li class="nav-item"><a class="nav-link active" href="/predict"><i class="fas fa-magic me-1"></i>Predict</a></li>
+        <li class="nav-item"><a class="nav-link" href="/compare"><i class="fas fa-code-compare me-1"></i>Compare</a></li>
+        <li class="nav-item"><a class="nav-link" href="/history"><i class="fas fa-history me-1"></i>History</a></li>
+        <li class="nav-item"><a class="nav-link" href="/insights"><i class="fas fa-chart-line me-1"></i>Insights</a></li>
+        <li class="nav-item"><a class="nav-link" href="/model-performance"><i class="fas fa-microscope me-1"></i>Model</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="result-hero">
+  <div class="container">
+    <p class="text-secondary mb-1 fw-bold result-student-name"><i class="fas fa-user me-2"></i>{{ result.student_name or 'Anonymous Student' }}</p>
+    <div class="grade-badge">{{ result.predicted_grade }}</div>
+    <h2 class="fw-bold mb-3">
+      {% if result.performance == 'High' %}<span style="color:var(--neon-green)">✅ Excellent Performance</span>
+      {% elif result.performance == 'Medium' %}<span style="color:#ffc107">⚡ Good Performance</span>
+      {% else %}<span style="color:#ff4136">⚠️ Needs Improvement</span>{% endif %}
+    </h2>
+    <span class="risk-badge risk-{{ result.risk_color }}">
+      {% if result.risk_color == 'success' %}🟢{% elif result.risk_color == 'warning' %}🟡{% else %}🔴{% endif %}
+      {{ result.risk_level }}
+    </span>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div class="container py-5" id="dashboardContent">
+
+  <!-- Metric cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-value" style="color:var(--neon-blue)">{{ "%.1f"|format(result.pass_probability) }}%</div>
+        <div class="metric-label"><i class="fas fa-check-circle me-1"></i>Pass Probability</div>
+        <div class="progress mt-2 pass-bar" style="height:6px">
+          <div class="progress-bar" style="width:{{ result.pass_probability }}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-value" style="color:var(--neon-green)">{{ "%.1f"|format(result.prob_high) }}%</div>
+        <div class="metric-label"><i class="fas fa-star me-1"></i>High Grade Prob</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-value" style="color:#ffc107">{{ "%.1f"|format(result.score_estimate) }}</div>
+        <div class="metric-label"><i class="fas fa-bullseye me-1"></i>Estimated Score</div>
+        <small style="color:#666">({{ "%.0f"|format(result.score_range_low) }}–{{ "%.0f"|format(result.score_range_high) }})</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-value" style="color:var(--neon-purple)">{{ result.predicted_grade }}</div>
+        <div class="metric-label"><i class="fas fa-graduation-cap me-1"></i>Predicted Grade</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts row 1 -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-4">
+      <div class="chart-card">
+        <h6><i class="fas fa-chart-bar me-2"></i>Pass vs Fail</h6>
+        <canvas id="barChart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="chart-card">
+        <h6><i class="fas fa-chart-pie me-2"></i>Performance Breakdown</h6>
+        <canvas id="doughnutChart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="chart-card">
+        <h6><i class="fas fa-spider me-2"></i>Student Profile</h6>
+        <canvas id="radarChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts row 2 -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6">
+      <div class="chart-card">
+        <h6><i class="fas fa-sort-amount-down me-2"></i>Feature Importance</h6>
+        <canvas id="featureChart" height="260"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="chart-card h-100">
+        <h6><i class="fas fa-lightbulb me-2" style="color:#ffc107"></i>AI Insights</h6>
+        {% for insight in result.insights %}
+        <div class="insight-card">{{ insight }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- What-If Simulation -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="sim-card">
+        <h6 style="color:var(--neon-purple)"><i class="fas fa-flask me-2"></i>What-If Simulation</h6>
+        <p style="color:#888;font-size:.85rem;margin-bottom:14px">
+          See how changing one factor — like attendance or study hours — would affect this student's predicted grade.
+          Select a parameter and click Run to simulate different scenarios.
+        </p>
+        <div class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label class="form-label">Parameter to test</label>
+            <select id="simParam" class="form-select">
+              <option value="attendance_percentage">Attendance %</option>
+              <option value="study_hours_per_day">Study Hours per Day</option>
+              <option value="social_media_hours">Social Media Hours</option>
+              <option value="sleep_hours">Sleep Hours</option>
+              <option value="concept_understanding_score">Concept Understanding Score</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <button id="runSimBtn" class="btn btn-primary-glow w-100" onclick="runSimulation(this)">
+              <i class="fas fa-play me-1"></i>Run Simulation
+            </button>
+          </div>
+        </div>
+        <p class="sim-desc" id="simDesc"></p>
+        <canvas id="simChart" height="110" class="mt-3"></canvas>
+        <div id="simError" style="display:none;color:#ff4136;background:rgba(255,65,54,0.1);border:1px solid rgba(255,65,54,0.3);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:.88rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="text-center pb-5">
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+      {% if from_history %}
+      <a href="/history" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Back to History</a>
+      {% else %}
+      <a href="/predict" class="btn btn-primary-glow"><i class="fas fa-redo me-2"></i>New Prediction</a>
+      {% endif %}
+      <button class="btn btn-pdf" onclick="downloadPDF(this)"><i class="fas fa-file-pdf me-2"></i>Download PDF</button>
+      <a href="/history" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-history me-2"></i>View History</a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/js/theme.js"></script>
+<script src="/static/js/app.js"></script>
+<script>
+// Pass form data to app.js for simulation
+window.baseForm = {{ form | tojson }};
+
+// ── Draw all 4 result charts with correct Chart.js property names ──
+(function () {
+  const B = '#00d4ff', P = '#7b2fff', G = '#00ff88', R = '#ff4136', Y = '#ffc107';
+
+  // 1. Bar — Pass vs Fail
+  new Chart(document.getElementById('barChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Pass', 'Fail'],
+      datasets: [{
+        data: [{{ result.pass_probability }}, {{ 100 - result.pass_probability }}],
+        backgroundColor: ['rgba(0,255,136,.6)', 'rgba(255,65,54,.6)'],
+        borderColor:     [G, R],
+        borderWidth: 2,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 0, max: 100, ticks: { color: '#888', callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,.05)' } },
+        x: { ticks: { color: '#aaa' }, grid: { display: false } }
+      }
+    }
+  });
+
+  // 2. Doughnut — Performance distribution
+  new Chart(document.getElementById('doughnutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['High', 'Medium', 'Low'],
+      datasets: [{
+        data: [{{ result.prob_high }}, {{ result.prob_medium }}, {{ result.prob_low }}],
+        backgroundColor: ['rgba(0,255,136,.6)', 'rgba(0,212,255,.6)', 'rgba(255,65,54,.6)'],
+        borderColor:     [G, B, R],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      cutout: '65%',
+      plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } }
+    }
+  });
+
+  // 3. Radar — Student profile
+  const rd = {{ result.radar | tojson }};
+  new Chart(document.getElementById('radarChart'), {
+    type: 'radar',
+    data: {
+      labels: ['Study Time', 'Attendance', 'Performance', 'Participation', 'Consistency'],
+      datasets: [{
+        label: 'Student',
+        data: [rd.study_time, rd.attendance, rd.performance, rd.participation, rd.consistency],
+        backgroundColor: 'rgba(0,212,255,.12)',
+        borderColor: B,
+        pointBackgroundColor: B,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      scales: {
+        r: {
+          min: 0, max: 100,
+          ticks: { color: '#555', backdropColor: 'transparent' },
+          grid: { color: 'rgba(255,255,255,.08)' },
+          angleLines: { color: 'rgba(255,255,255,.08)' },
+          pointLabels: { color: '#aaa' }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // 4. Bar (horizontal) — Feature importance
+  const fi = {{ result.feature_importance | tojson }};
+  const fiKeys = Object.keys(fi).slice(0, 10);
+  const fiVals = fiKeys.map(k => +(fi[k] * 100).toFixed(2));
+  new Chart(document.getElementById('featureChart'), {
+    type: 'bar',
+    data: {
+      labels: fiKeys.map(k => k.replace(/_/g, ' ').replace(/\bai\b/gi, 'AI').slice(0, 24)),
+      datasets: [{
+        data: fiVals,
+        backgroundColor: 'rgba(123,47,255,.6)',
+        borderColor: P,
+        borderWidth: 1.5,
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,.05)' } },
+        y: { ticks: { color: '#aaa', font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+})();
+</script>
+</body>
+</html>
