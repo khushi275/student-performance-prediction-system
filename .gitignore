@@ -1,7 +1,7 @@
 __pycache__/
 *.pyc
 *.pyo
-models/*.pkl
+# models/*.pkl
 models/*.json
 predictions.db
 .env
